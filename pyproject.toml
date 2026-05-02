@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "transparent-png-lab"
+version = "0.2.0"
+description = "Local transparent PNG background-removal variants, alpha QA, and browser preview."
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+license = {text = "MIT"}
+authors = [{name = "Transparent PNG Lab"}]
+dependencies = [
+  "flask>=3.0",
+  "numpy>=1.26",
+  "pillow>=10.0"
+]
+
+[project.optional-dependencies]
+cpu = ["rembg[cpu,cli]>=2.0.75"]
+gpu = ["rembg[gpu,cli]>=2.0.75"]
+inspyrenet = ["transparent-background>=1.3.4"]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+tpng = "transparent_png_lab.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["transparent_png_lab*"]
+
+[tool.setuptools.package-data]
+transparent_png_lab = ["templates/*.html", "static/*.css", "static/*.js"]

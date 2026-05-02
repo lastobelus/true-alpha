@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+runs/*
+!runs/.gitkeep
+inputs/*
+!inputs/.gitkeep
+*.egg-info/
+dist/
+build/
+.u2net/
