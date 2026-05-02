@@ -135,8 +135,11 @@ Each output card has:
 - **Alpha Mask** — open the alpha mask for inspection.
 - **Open** — open the final PNG directly.
 - **Save** — save the final PNG through the native save dialog where available.
+- A fullscreen button in the preview area for close inspection.
 
 The original source image is shown as the first card. If the input already has transparency, `source-alpha-sanitize` appears next; RGB/no-alpha inputs skip that card.
+
+After choosing an input image in the web UI, True Alpha asks for the flat background colour used for transparency cleanup. Choose one of the four corners, or use **Custom** and click the image to sample any pixel; the sampled colour is written into the edge-background setting.
 
 If prompt metadata is available, the title card shows **Original prompt** and **Imagegen prompt** links that open popup dialogs. Prompt metadata can be provided next to the input image as:
 
