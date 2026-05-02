@@ -4,8 +4,8 @@ from pathlib import Path
 from threading import Timer
 from flask import Flask, jsonify, render_template, request, send_from_directory, url_for
 from werkzeug.utils import secure_filename
-from .config import PREVIEW_BACKGROUNDS
-from .pipeline import PipelineOptions, find_runs, load_manifest, make_run_dir, process_image, slugify
+from .config import PREVIEW_BACKGROUNDS, SHOW_DOWNLOAD_FALLBACK
+from .pipeline import PipelineOptions, find_runs, load_manifest, make_run_dir, process_image_progressive, slugify
 from .save_dialog import save_png_with_native_dialog
 
 def create_app(project_root: str | Path | None = None) -> Flask:
@@ -18,12 +18,12 @@ def create_app(project_root: str | Path | None = None) -> Flask:
     def index():
         runs = [p.name for p in find_runs(runs_root)]
         latest = runs[0] if runs else None
-        return render_template("index.html", run_id=latest, backgrounds=PREVIEW_BACKGROUNDS, initial_manifest=None, runs=runs)
+        return render_template("index.html", run_id=latest, backgrounds=PREVIEW_BACKGROUNDS, initial_manifest=None, runs=runs, show_download_fallback=SHOW_DOWNLOAD_FALLBACK)
 
     @app.get("/run/<run_id>")
     def run_page(run_id: str):
         run_dir = safe_run_dir(runs_root, run_id)
-        return render_template("index.html", run_id=run_id, backgrounds=PREVIEW_BACKGROUNDS, initial_manifest=load_manifest(run_dir), runs=[p.name for p in find_runs(runs_root)])
+        return render_template("index.html", run_id=run_id, backgrounds=PREVIEW_BACKGROUNDS, initial_manifest=load_manifest(run_dir), runs=[p.name for p in find_runs(runs_root)], show_download_fallback=SHOW_DOWNLOAD_FALLBACK)
 
     @app.get("/api/run/<run_id>")
     def api_run(run_id: str):
@@ -36,9 +36,9 @@ def create_app(project_root: str | Path | None = None) -> Flask:
             return jsonify({"error": "No image file uploaded."}), 400
         filename = secure_filename(file.filename) or "input.png"
         input_path = inputs_root / filename; file.save(input_path)
-        models = request.form.get("models", "u2netp,u2net,isnet-general-use,birefnet-general,birefnet-general-lite")
+        models = request.form.get("models", "u2netp,u2net,isnet-general-use,birefnet-general")
         options = PipelineOptions(rembg_models=[m.strip() for m in models.split(",") if m.strip()], include_inspyrenet=request.form.get("include_inspyrenet") == "on", edge_bg=request.form.get("edge_bg", "auto") or "auto")
-        run_dir = process_image(input_path, output_dir=make_run_dir(input_path, runs_root), options=options)
+        run_dir = process_image_progressive(input_path, output_dir=make_run_dir(input_path, runs_root), options=options)
         return jsonify({"run_id": run_dir.name, "url": url_for("run_page", run_id=run_dir.name)})
 
     @app.get("/runs/<run_id>/<path:filename>")

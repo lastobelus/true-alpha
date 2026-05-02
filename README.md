@@ -1,4 +1,4 @@
-# Transparent PNG Lab
+# True Alpha
 
 Local macOS/Linux project for producing **true transparent PNGs**: PNG files with a real RGBA alpha channel, not generated checkerboard pixels.
 
@@ -7,7 +7,7 @@ It supports both workflows:
 1. **Agent workflow** — start Codex, Claude, OpenCode, or another agent inside this project and ask for a transparent asset. The agent generates a source image, then runs the pipeline.
 2. **Existing-image workflow** — drop in an image you already generated and run it through the pipeline.
 
-The pipeline creates multiple variants, opens an HTML preview, lets you change the preview background across 16 default colours plus a custom colour, and saves the selected variant through a native save-file dialog where available.
+The pipeline creates multiple variants, opens an HTML preview, lets you change the preview background across 16 editable colour swatches, and saves the selected variant through a native save-file dialog where available.
 
 ---
 
@@ -64,7 +64,7 @@ Pre-download the default rembg model weights after install:
 ./tpng warm-models
 ```
 
-The first real run can take longer if model weights are not already cached.
+The first real run can take longer if model weights are not already cached. When using the browser preview, True Alpha shows the first fast results as soon as they are ready and fills in slower model cards as pending variants complete.
 
 ---
 
@@ -101,7 +101,7 @@ runs/<timestamp>-<image-name>/
 Start the agent in this project directory, then ask something like:
 
 ```text
-Generate a cute red dragon sticker source image, then run the Transparent PNG Lab pipeline.
+Generate a cute red dragon sticker source image, then run the True Alpha pipeline.
 ```
 
 The agent should read `AGENTS.md`. In short, it should:
@@ -130,13 +130,19 @@ The preview page shows every successful variant over the selected background col
 black, white, near white, mid gray, charcoal, red, orange, yellow, green, cyan, blue, purple, magenta, warm tan, deep teal, pink
 ```
 
-Click **Save selected PNG…** on the variant you want.
+Each output card has:
+
+- **Alpha Mask** — open the alpha mask for inspection.
+- **Open** — open the final PNG directly.
+- **Save** — save the final PNG through the native save dialog where available.
+
+The original source image is shown as the first card. If the input already has transparency, `source-alpha-sanitize` appears next; RGB/no-alpha inputs skip that card.
 
 Save dialog behavior:
 
 - macOS: uses the system save-file dialog through `osascript`.
 - Linux: uses `zenity`, `kdialog`, or `yad` if one is installed.
-- Browser fallback: uses the browser save picker where supported, otherwise downloads the selected PNG.
+- Browser fallback: uses the browser save picker where supported, otherwise downloads the selected PNG. The explicit fallback download link is hidden by default; set `SHOW_DOWNLOAD_FALLBACK = True` in `transparent_png_lab/config.py` to show it.
 
 For Linux native save dialogs, install one of these with your package manager if none is present:
 
@@ -155,7 +161,6 @@ sudo apt install zenity
 - `rembg-u2net` — general rembg model.
 - `rembg-isnet-general-use` — ISNet general-use model.
 - `rembg-birefnet-general` — BiRefNet general model.
-- `rembg-birefnet-general-lite` — lighter BiRefNet general model.
 
 Optional:
 
@@ -167,6 +172,8 @@ Use fewer rembg models:
 ```bash
 ./tpng process inputs/my-image.png --models u2netp,isnet-general-use --open
 ```
+
+You can opt into the lighter BiRefNet comparison model by adding `birefnet-general-lite` to `--models` or the web UI Advanced popup.
 
 Skip AI and only use native alpha / solid-background matte:
 

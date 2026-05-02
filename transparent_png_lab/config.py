@@ -3,7 +3,8 @@ from pathlib import Path
 PROJECT_ROOT = Path.cwd()
 INPUTS_DIR = PROJECT_ROOT / "inputs"
 RUNS_DIR = PROJECT_ROOT / "runs"
-DEFAULT_REMBG_MODELS = ["u2netp", "u2net", "isnet-general-use", "birefnet-general", "birefnet-general-lite"]
+DEFAULT_REMBG_MODELS = ["u2netp", "u2net", "isnet-general-use", "birefnet-general"]
+SHOW_DOWNLOAD_FALLBACK = False
 PREVIEW_BACKGROUNDS = [
     {"name": "black", "hex": "#000000", "rgb": [0, 0, 0]},
     {"name": "white", "hex": "#ffffff", "rgb": [255, 255, 255]},

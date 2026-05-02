@@ -12,7 +12,7 @@ The preferred source image is not “transparent.” It is an ordinary image wit
 source image
   → native-alpha sanitize, if source already has alpha
   → simple solid-background matte
-  → multiple rembg model variants
+  → rembg model variants
   → optional InSPyReNet variants
   → RGBA sanitization
   → optional edge decontamination
@@ -20,6 +20,8 @@ source image
   → HTML preview over multiple solid backgrounds
   → save chosen variant
 ```
+
+In browser-preview workflows, True Alpha writes an initial manifest, runs the fast first outputs, opens the page, and marks slower variants as `pending` or `running` until their PNGs are ready. The page polls the run manifest and updates cards in place.
 
 ## Important details
 
@@ -74,6 +76,7 @@ Default variants are selected to give a useful spread:
 - non-AI solid-background matte
 - rembg U2Net models
 - rembg ISNet model
-- rembg BiRefNet models
+- rembg BiRefNet general model
 
 Optional InSPyReNet support is available with `./install.sh --inspyrenet`.
+The lighter `birefnet-general-lite` model is available when explicitly listed in `--models` or the web UI Advanced popup, but it is not part of the default model list.

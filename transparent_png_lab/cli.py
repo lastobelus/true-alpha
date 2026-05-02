@@ -5,10 +5,10 @@ from PIL import Image
 from .alpha import alpha_stats
 from .config import DEFAULT_REMBG_MODELS
 from .engines import tool_status
-from .pipeline import PipelineOptions, load_manifest, process_image
+from .pipeline import PipelineOptions, load_manifest, process_image, process_image_progressive
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="tpng", description="Transparent PNG Lab: background-removal variants, alpha QA, and HTML preview.")
+    parser = argparse.ArgumentParser(prog="tpng", description="True Alpha: background-removal variants, alpha QA, and HTML preview.")
     sub = parser.add_subparsers(dest="command", required=True)
     process = sub.add_parser("process", help="Process an input image into transparent PNG variants.")
     process.add_argument("input", type=Path); process.add_argument("--out", type=Path, default=None)
@@ -26,7 +26,7 @@ def options_from_args(args: argparse.Namespace) -> PipelineOptions:
     return PipelineOptions(rembg_models=[m.strip() for m in (args.models or "").split(",") if m.strip()], include_inspyrenet=bool(getattr(args, "inspyrenet", False)), include_solid_bg=not bool(getattr(args, "no_solid_bg", False)), include_native_alpha=not bool(getattr(args, "no_native_alpha", False)), alpha_matting=not bool(getattr(args, "no_alpha_matting", False)), edge_bg=getattr(args, "edge_bg", "auto"))
 
 def cmd_process(args):
-    run_dir = process_image(args.input, output_dir=args.out, options=options_from_args(args))
+    run_dir = process_image_progressive(args.input, output_dir=args.out, options=options_from_args(args)) if args.open else process_image(args.input, output_dir=args.out, options=options_from_args(args))
     print(f"run: {run_dir}"); print(f"manifest: {run_dir / 'manifest.json'}")
     manifest = load_manifest(run_dir); ok = [v for v in manifest.get("variants", []) if v.get("status") == "ok"]; failed = [v for v in manifest.get("variants", []) if v.get("status") == "failed"]; skipped = [v for v in manifest.get("variants", []) if v.get("status") == "skipped"]
     print(f"variants: {len(ok)} ok, {len(failed)} failed, {len(skipped)} skipped")
@@ -39,7 +39,7 @@ def cmd_process(args):
 def cmd_web(args):
     run_id = args.run; project_root = Path.cwd()
     if args.input:
-        run_dir = process_image(args.input, options=PipelineOptions(rembg_models=[m.strip() for m in (args.models or "").split(",") if m.strip()], include_inspyrenet=args.inspyrenet, edge_bg=args.edge_bg))
+        run_dir = process_image_progressive(args.input, options=PipelineOptions(rembg_models=[m.strip() for m in (args.models or "").split(",") if m.strip()], include_inspyrenet=args.inspyrenet, edge_bg=args.edge_bg))
         run_id = run_dir.name; print(f"run: {run_dir}"); project_root = run_dir.parent.parent if run_dir.parent.name == "runs" else Path.cwd()
     from .preview_server import serve
     serve(project_root, host=args.host, port=args.port, open_browser=not args.no_open, run_id=run_id)
@@ -69,7 +69,7 @@ def cmd_doctor(args):
     status = tool_status(); status["python"] = {"version": sys.version.split()[0], "executable": sys.executable}
     if args.json: print(json.dumps(status, indent=2))
     else:
-        print("Transparent PNG Lab doctor"); print(f"Python: {status['python']['version']} ({status['python']['executable']})")
+        print("True Alpha doctor"); print(f"Python: {status['python']['version']} ({status['python']['executable']})")
         for name, info in status.items():
             if name == "python": continue
             mark = "OK" if info.get("available") else "MISSING"; version = f" {info.get('version')}" if info.get("version") else ""; extra = f" — {info.get('error')}" if info.get("error") else ""
@@ -79,7 +79,7 @@ def cmd_doctor(args):
 
 def cmd_agent_prompt(args):
     description = " ".join(args.description).strip() or "[describe the desired transparent image here]"
-    print(f"""You are working inside Transparent PNG Lab.
+    print(f"""You are working inside True Alpha.
 
 Create this transparent-image source asset:
 
