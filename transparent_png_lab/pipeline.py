@@ -25,6 +25,33 @@ def slugify(value: str, fallback: str = "image") -> str:
 def make_run_dir(input_path: Path, runs_root: Path = RUNS_DIR) -> Path:
     return runs_root / f"{datetime.now().strftime('%Y%m%d-%H%M%S')}-{slugify(input_path.stem)}"
 
+def load_prompt_metadata(input_path: Path) -> dict:
+    prompts: dict[str, str] = {}
+    candidates = {
+        "original_user": [input_path.with_suffix(input_path.suffix + ".user-prompt.txt"), input_path.with_name(f"{input_path.stem}.user-prompt.txt")],
+        "imagegen_full": [input_path.with_suffix(input_path.suffix + ".imagegen-prompt.txt"), input_path.with_name(f"{input_path.stem}.imagegen-prompt.txt")],
+    }
+    json_path = input_path.with_suffix(input_path.suffix + ".prompts.json")
+    if json_path.exists():
+        try:
+            data = json.loads(json_path.read_text(encoding="utf-8"))
+            for key in ("original_user", "imagegen_full"):
+                value = data.get(key)
+                if isinstance(value, str) and value.strip():
+                    prompts[key] = value.strip()
+        except Exception:
+            pass
+    for key, paths in candidates.items():
+        if key in prompts:
+            continue
+        for path in paths:
+            if path.exists():
+                value = path.read_text(encoding="utf-8").strip()
+                if value:
+                    prompts[key] = value
+                    break
+    return prompts
+
 def result_id_for_rembg_model(model: str) -> str:
     return f"rembg-{model}".replace("_", "-")
 
@@ -76,6 +103,7 @@ def process_image(input_path: str | Path, output_dir: str | Path | None = None, 
     manifest = {
         "schema": "transparent-png-lab/v1", "created_at": datetime.now(timezone.utc).isoformat(), "run_dir": str(run_dir),
         "source": {"original_path": str(input_path), "path": "source.png", "width": source.width, "height": source.height, "mode": source.mode, "corner_background_rgb": list(corner_bg) if corner_bg else None},
+        "prompts": load_prompt_metadata(input_path),
         "options": {"rembg_models": options.rembg_models, "include_inspyrenet": options.include_inspyrenet, "include_solid_bg": options.include_solid_bg, "include_native_alpha": options.include_native_alpha, "alpha_matting": options.alpha_matting, "edge_bg": options.edge_bg, "edge_bg_resolved": list(decontam_bg) if decontam_bg else None},
         "variants": [],
     }
@@ -116,6 +144,7 @@ def create_run_manifest(input_path: str | Path, output_dir: str | Path | None = 
     manifest = {
         "schema": "transparent-png-lab/v1", "created_at": datetime.now(timezone.utc).isoformat(), "run_dir": str(run_dir),
         "source": {"original_path": str(input_path), "path": "source.png", "width": source.width, "height": source.height, "mode": source.mode, "corner_background_rgb": list(corner_bg) if corner_bg else None},
+        "prompts": load_prompt_metadata(input_path),
         "options": {"rembg_models": options.rembg_models, "include_inspyrenet": options.include_inspyrenet, "include_solid_bg": options.include_solid_bg, "include_native_alpha": options.include_native_alpha, "alpha_matting": options.alpha_matting, "edge_bg": options.edge_bg, "edge_bg_resolved": list(decontam_bg) if decontam_bg else None, "progressive": True},
         "variants": [],
         "progress": {"status": "running", "completed": 0, "total": 0},

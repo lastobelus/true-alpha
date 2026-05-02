@@ -32,6 +32,46 @@ button, input, select { font: inherit; }
 .topbar h1 { margin: 0 0 .25rem; font-size: 1.35rem; }
 .topbar p { margin: 0; color: var(--muted); }
 .topbar nav { display: flex; gap: .75rem; align-items: center; }
+.prompt-links {
+  display: flex;
+  gap: .55rem;
+  margin-top: .55rem;
+}
+.prompt-links button {
+  min-height: 0;
+  padding: .25rem .5rem;
+  border-radius: 8px;
+  background: #202631;
+  color: var(--accent);
+}
+.prompt-dialog {
+  width: min(780px, calc(100vw - 2rem));
+  max-height: min(780px, calc(100vh - 2rem));
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--text);
+  padding: 1rem;
+}
+.prompt-dialog::backdrop { background: rgba(0, 0, 0, .62); }
+.prompt-dialog h2 { margin: 0 2.5rem .75rem 0; }
+.prompt-dialog pre {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow: auto;
+  color: var(--muted);
+  font: .92rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.dialog-close {
+  position: absolute;
+  top: .65rem;
+  right: .65rem;
+  width: 2rem;
+  height: 2rem;
+  min-height: 0;
+  padding: 0;
+  border-radius: 999px;
+}
 main { padding: 1.25rem; max-width: 1500px; margin: 0 auto; }
 .panel {
   background: var(--panel);
@@ -48,10 +88,33 @@ main { padding: 1.25rem; max-width: 1500px; margin: 0 auto; }
   align-items: center;
   flex-wrap: wrap;
 }
-.upload-panel input[type=file] {
-  flex: 0 1 430px;
-  min-width: 240px;
-  max-width: 430px;
+.file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.file-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.45rem;
+  border: 1px solid var(--border);
+  background: #29384f;
+  color: var(--text);
+  border-radius: 10px;
+  padding: .55rem .85rem;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+.file-button:hover { filter: brightness(1.15); }
+.file-name {
+  color: var(--muted);
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 0 1 260px;
 }
 .advanced-popover {
   position: relative;
@@ -297,10 +360,11 @@ button:disabled { opacity: .55; cursor: wait; }
 @media (max-width: 760px) {
   .topbar { align-items: flex-start; flex-direction: column; }
   .upload-panel form { align-items: stretch; flex-direction: column; }
-  .upload-panel input[type=file],
+  .file-button,
+  .file-name,
   .upload-panel form > button[type=submit],
   .advanced-popover { width: 100%; }
-  .upload-panel input[type=file] { max-width: none; }
+  .file-name { max-width: none; }
   .advanced-fields { left: 0; right: auto; }
   .swatches { grid-template-columns: repeat(4, 1fr); }
   .actions { grid-template-columns: 1fr; }

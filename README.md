@@ -138,6 +138,12 @@ Each output card has:
 
 The original source image is shown as the first card. If the input already has transparency, `source-alpha-sanitize` appears next; RGB/no-alpha inputs skip that card.
 
+If prompt metadata is available, the title card shows **Original prompt** and **Imagegen prompt** links that open popup dialogs. Prompt metadata can be provided next to the input image as:
+
+- `<image filename>.user-prompt.txt`
+- `<image filename>.imagegen-prompt.txt`
+- `<image filename>.prompts.json` with `original_user` and/or `imagegen_full` string fields
+
 Save dialog behavior:
 
 - macOS: uses the system save-file dialog through `osascript`.
