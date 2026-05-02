@@ -1,6 +1,7 @@
 const state = { runId: window.TPNG.runId, manifest: window.TPNG.initialManifest, bg: '#ffffff', pollTimer: null };
 const uploadForm = document.getElementById('uploadForm');
 const imageInput = document.getElementById('imageInput');
+const chooseFileButton = document.getElementById('chooseFileButton');
 const fileName = document.getElementById('fileName');
 const uploadStatus = document.getElementById('uploadStatus');
 const controlsPanel = document.getElementById('controlsPanel');
@@ -27,6 +28,7 @@ async function loadRun(runId){const response=await fetch(`/api/run/${encodeURICo
 function needsPolling(manifest){return (manifest.variants||[]).some(v=>v.status==='pending'||v.status==='running')||manifest.progress?.status==='running';}
 function updatePolling(manifest){if(needsPolling(manifest)){if(!state.pollTimer)state.pollTimer=setInterval(()=>loadRun(state.runId).catch(error=>console.warn(error)),2000);}else if(state.pollTimer){clearInterval(state.pollTimer);state.pollTimer=null;}}
 if(uploadForm){uploadForm.addEventListener('submit',async event=>{event.preventDefault();const button=uploadForm.querySelector('button[type="submit"]');button.disabled=true;uploadStatus.textContent='Processing variants. First run may download model weights.';try{const formData=new FormData(uploadForm);const response=await fetch('/api/upload',{method:'POST',body:formData});const payload=await response.json();if(!response.ok)throw new Error(payload.error||`HTTP ${response.status}`);uploadStatus.textContent=`Done: ${payload.run_id}`;await loadRun(payload.run_id);}catch(error){uploadStatus.textContent=`Failed: ${error.message}`;}finally{button.disabled=false;}});}
+if(chooseFileButton&&imageInput){chooseFileButton.addEventListener('click',()=>imageInput.click());}
 if(imageInput&&fileName){imageInput.addEventListener('change',()=>{fileName.textContent=imageInput.files?.[0]?.name||'No file chosen';});}
 if(runSelect){runSelect.addEventListener('change',()=>{if(runSelect.value)window.location.href=`/run/${encodeURIComponent(runSelect.value)}`;});}
 document.addEventListener('click',event=>{if(advancedPopover&&advancedPopover.open&&!advancedPopover.contains(event.target))advancedPopover.open=false;});
