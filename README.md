@@ -135,6 +135,7 @@ Each output card has:
 - **Alpha Mask** — open the alpha mask for inspection.
 - **Open** — open the final PNG directly.
 - **Save** — save the final PNG through the native save dialog where available.
+- **Use on folder** — apply the selected successful removal method to every image in the source image's folder.
 - A fullscreen button in the preview area for close inspection.
 
 The original source image is shown as the first card. If the input already has transparency, `source-alpha-sanitize` appears next; RGB/no-alpha inputs skip that card.
@@ -146,6 +147,14 @@ If prompt metadata is available, the title card shows **Original prompt** and **
 - `<image filename>.user-prompt.txt`
 - `<image filename>.imagegen-prompt.txt`
 - `<image filename>.prompts.json` with `original_user` and/or `imagegen_full` string fields
+
+Batch folder processing:
+
+- Process one representative image first, compare the output cards, and choose the best removal method.
+- Click **Use on folder** on that winning output card.
+- The dialog defaults to the original image's folder and writes PNG outputs to `true-alpha-output` inside that folder.
+- `edge background` defaults to `auto`, which re-estimates the flat background colour separately for each image in the folder. Enter `none`, `#e6e6e6`, or `230,230,230` to override it.
+- Existing output PNGs are skipped by default.
 
 Save dialog behavior:
 

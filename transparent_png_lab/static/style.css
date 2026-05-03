@@ -377,8 +377,13 @@ button:disabled { opacity: .55; cursor: wait; }
   min-height: 2.2rem;
 }
 .save-button { min-height: 2.2rem; }
+.folder-button {
+  grid-column: 1 / -1;
+  min-height: 2.2rem;
+}
 .save-status { margin-top: .65rem; color: var(--muted); font-size: .9rem; }
 #uploadStatus { margin-top: .75rem; color: var(--muted); }
+.folder-dialog,
 .transparency-dialog {
   width: min(900px, calc(100vw - 2rem));
   border: 1px solid var(--border);
@@ -387,8 +392,39 @@ button:disabled { opacity: .55; cursor: wait; }
   color: var(--text);
   padding: 1rem;
 }
+.folder-dialog h2,
 .transparency-dialog h2 { margin: 0 0 .35rem; }
+.folder-dialog p,
 .transparency-dialog p { margin: 0 0 1rem; color: var(--muted); }
+.folder-fields {
+  display: grid;
+  gap: .75rem;
+}
+.folder-fields label {
+  display: grid;
+  gap: .35rem;
+  color: var(--muted);
+  font-size: .9rem;
+}
+.folder-fields input[type="text"] {
+  width: 100%;
+  color: var(--text);
+  background: #111318;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: .65rem .75rem;
+}
+.folder-fields .checkbox {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+}
+.folder-actions {
+  display: flex;
+  gap: .65rem;
+  margin-top: 1rem;
+}
+#folderStatus { margin-top: .75rem; }
 .transparency-layout {
   display: grid;
   grid-template-columns: minmax(280px, 1fr) 220px;

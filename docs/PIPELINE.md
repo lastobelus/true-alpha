@@ -23,6 +23,8 @@ source image
 
 In browser-preview workflows, True Alpha writes an initial manifest, runs the fast first outputs, opens the page, and marks slower variants as `pending` or `running` until their PNGs are ready. The page polls the run manifest and updates cards in place.
 
+After a representative image has been processed, any successful output card can be reused as a folder batch method with **Use on folder**. The batch flow applies that selected engine/model to every supported image in the same source folder and writes final PNGs to a separate output folder. By default, edge-background cleanup remains `auto`, so each image gets its own corner-background estimate.
+
 ## Important details
 
 ### RGBA check
