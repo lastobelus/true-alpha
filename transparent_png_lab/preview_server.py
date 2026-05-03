@@ -9,7 +9,7 @@ from .alpha import alpha_stats, estimate_corner_background, parse_rgb, sanitize_
 from .config import PREVIEW_BACKGROUNDS, SHOW_DOWNLOAD_FALLBACK
 from .engines import inspyrenet_variant, multi_shade_background_variant, native_alpha_variant, rembg_variant, solid_background_variant
 from .pipeline import PipelineOptions, find_runs, load_manifest, make_run_dir, process_image_progressive, slugify
-from .save_dialog import save_png_with_native_dialog
+from .save_dialog import choose_folder_path, save_png_with_native_dialog
 
 SUPPORTED_BATCH_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
 
@@ -45,6 +45,16 @@ def create_app(project_root: str | Path | None = None) -> Flask:
         options = PipelineOptions(rembg_models=[m.strip() for m in models.split(",") if m.strip()], include_inspyrenet=request.form.get("include_inspyrenet") == "on", edge_bg=request.form.get("edge_bg", "auto") or "auto")
         run_dir = process_image_progressive(input_path, output_dir=make_run_dir(input_path, runs_root), options=options)
         return jsonify({"run_id": run_dir.name, "url": url_for("run_page", run_id=run_dir.name)})
+
+    @app.post("/api/pick-folder")
+    def api_pick_folder():
+        try:
+            folder = choose_folder_path()
+            if folder is None:
+                return jsonify({"status": "cancelled"})
+            return jsonify({"status": "selected", "path": str(folder.resolve())})
+        except Exception as exc:
+            return jsonify({"status": "unavailable", "error": str(exc)}), 503
 
     @app.get("/runs/<run_id>/<path:filename>")
     def run_file(run_id: str, filename: str):

@@ -414,6 +414,12 @@ button:disabled { opacity: .55; cursor: wait; }
   border-radius: 8px;
   padding: .65rem .75rem;
 }
+.folder-source-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: .6rem;
+}
+.folder-source-row button { white-space: nowrap; }
 .folder-fields .checkbox {
   display: flex;
   align-items: center;
@@ -484,4 +490,5 @@ button:disabled { opacity: .55; cursor: wait; }
   .advanced-fields { left: 0; right: auto; }
   .swatches { grid-template-columns: repeat(4, 1fr); }
   .actions { grid-template-columns: 1fr; }
+  .folder-source-row { grid-template-columns: 1fr; }
 }

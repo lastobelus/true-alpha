@@ -152,7 +152,8 @@ Batch folder processing:
 
 - Process one representative image first, compare the output cards, and choose the best removal method.
 - Click **Use on folder** on that winning output card.
-- The dialog defaults to the original image's folder and writes PNG outputs to `true-alpha-output` inside that folder.
+- Browsers do not expose the original absolute folder for ordinary file uploads, so the dialog includes **Pick folder** to choose the real source folder with a native OS folder picker.
+- The dialog writes PNG outputs to `true-alpha-output` inside the selected folder by default.
 - `edge background` defaults to `auto`, which re-estimates the flat background colour separately for each image in the folder. Enter `none`, `#e6e6e6`, or `230,230,230` to override it.
 - Existing output PNGs are skipped by default.
 
