@@ -82,6 +82,8 @@ Or use the browser upload UI:
 ./tpng web
 ```
 
+If the browser file picker does not open in a launched or embedded Chrome instance, use **Pick file**. It opens a native OS file picker from the local server and processes the selected file by absolute path.
+
 The run is written to:
 
 ```text

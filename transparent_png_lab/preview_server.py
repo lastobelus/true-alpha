@@ -9,7 +9,7 @@ from .alpha import alpha_stats, estimate_corner_background, parse_rgb, sanitize_
 from .config import PREVIEW_BACKGROUNDS, SHOW_DOWNLOAD_FALLBACK
 from .engines import inspyrenet_variant, multi_shade_background_variant, native_alpha_variant, rembg_variant, solid_background_variant
 from .pipeline import PipelineOptions, find_runs, load_manifest, make_run_dir, process_image_progressive, slugify
-from .save_dialog import choose_folder_path, save_png_with_native_dialog
+from .save_dialog import choose_file_path, choose_folder_path, save_png_with_native_dialog
 
 SUPPORTED_BATCH_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
 
@@ -37,14 +37,33 @@ def create_app(project_root: str | Path | None = None) -> Flask:
     @app.post("/api/upload")
     def api_upload():
         file = request.files.get("image")
-        if not file or not file.filename:
+        picked_path = request.form.get("picked_path", "").strip()
+        if file and file.filename:
+            filename = secure_filename(file.filename) or "input.png"
+            input_path = inputs_root / filename; file.save(input_path)
+        elif picked_path:
+            input_path = Path(picked_path).expanduser().resolve()
+            if not input_path.exists() or not input_path.is_file():
+                return jsonify({"error": "Picked image file does not exist."}), 400
+        else:
             return jsonify({"error": "No image file uploaded."}), 400
-        filename = secure_filename(file.filename) or "input.png"
-        input_path = inputs_root / filename; file.save(input_path)
         models = request.form.get("models", "u2netp,u2net,isnet-general-use,birefnet-general")
         options = PipelineOptions(rembg_models=[m.strip() for m in models.split(",") if m.strip()], include_inspyrenet=request.form.get("include_inspyrenet") == "on", edge_bg=request.form.get("edge_bg", "auto") or "auto")
         run_dir = process_image_progressive(input_path, output_dir=make_run_dir(input_path, runs_root), options=options)
         return jsonify({"run_id": run_dir.name, "url": url_for("run_page", run_id=run_dir.name)})
+
+    @app.post("/api/pick-file")
+    def api_pick_file():
+        try:
+            path = choose_file_path()
+            if path is None:
+                return jsonify({"status": "cancelled"})
+            path = path.resolve()
+            if path.suffix.lower() not in SUPPORTED_BATCH_EXTENSIONS:
+                return jsonify({"status": "unsupported", "error": "Choose a PNG, JPEG, or WebP image."}), 400
+            return jsonify({"status": "selected", "path": str(path), "name": path.name})
+        except Exception as exc:
+            return jsonify({"status": "unavailable", "error": str(exc)}), 503
 
     @app.post("/api/pick-folder")
     def api_pick_folder():
