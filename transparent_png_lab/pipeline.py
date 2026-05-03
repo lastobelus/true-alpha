@@ -7,7 +7,7 @@ from threading import Thread
 from PIL import Image
 from .alpha import alpha_stats, estimate_corner_background, parse_rgb, save_alpha_mask, save_audits
 from .config import DEFAULT_REMBG_MODELS, RUNS_DIR
-from .engines import EngineResult, inspyrenet_variant, native_alpha_variant, rembg_variant, solid_background_variant
+from .engines import EngineResult, inspyrenet_variant, multi_shade_background_variant, native_alpha_variant, rembg_variant, solid_background_variant
 
 @dataclass
 class PipelineOptions:
@@ -112,6 +112,7 @@ def process_image(input_path: str | Path, output_dir: str | Path | None = None, 
         results.append(native_alpha_variant(source))
     if options.include_solid_bg:
         results.append(solid_background_variant(source_rgb, corner_bg))
+        results.append(multi_shade_background_variant(source_rgb))
     for model in options.rembg_models:
         if model.strip():
             results.append(rembg_variant(source_png, model=model.strip(), decontam_bg=decontam_bg, alpha_matting=options.alpha_matting))
@@ -196,13 +197,14 @@ def process_image_progressive(input_path: str | Path, output_dir: str | Path | N
     pending = [pending_entry(result_id_for_rembg_model(model), f"rembg {model}", "rembg", model) for model in remaining_models]
     if options.include_inspyrenet:
         pending.extend([pending_entry("inspyrenet-base-static", "InSPyReNet base/static", "transparent-background", "base/static"), pending_entry("inspyrenet-fast-static", "InSPyReNet fast/static", "transparent-background", "fast/static")])
-    manifest["progress"] = {"status": "running", "completed": 0, "total": len(pending) + int(options.include_native_alpha) + int(options.include_solid_bg) + len(initial_models)}
+    manifest["progress"] = {"status": "running", "completed": 0, "total": len(pending) + int(options.include_native_alpha) + (2 * int(options.include_solid_bg)) + len(initial_models)}
     write_manifest(run_dir, manifest)
     seen_ids: set[str] = set()
     if options.include_native_alpha:
         append_result_manifest(run_dir, manifest, native_alpha_variant(source), seen_ids)
     if options.include_solid_bg:
         append_result_manifest(run_dir, manifest, solid_background_variant(source_rgb, corner_bg), seen_ids)
+        append_result_manifest(run_dir, manifest, multi_shade_background_variant(source_rgb), seen_ids)
     for model in initial_models:
         append_result_manifest(run_dir, manifest, rembg_variant(run_dir / "source.png", model=model, decontam_bg=decontam_bg, alpha_matting=options.alpha_matting), seen_ids)
     manifest["variants"].extend(pending)

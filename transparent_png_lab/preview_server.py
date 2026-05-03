@@ -7,7 +7,7 @@ from PIL import Image
 from werkzeug.utils import secure_filename
 from .alpha import alpha_stats, estimate_corner_background, parse_rgb, sanitize_rgba
 from .config import PREVIEW_BACKGROUNDS, SHOW_DOWNLOAD_FALLBACK
-from .engines import inspyrenet_variant, native_alpha_variant, rembg_variant, solid_background_variant
+from .engines import inspyrenet_variant, multi_shade_background_variant, native_alpha_variant, rembg_variant, solid_background_variant
 from .pipeline import PipelineOptions, find_runs, load_manifest, make_run_dir, process_image_progressive, slugify
 from .save_dialog import save_png_with_native_dialog
 
@@ -166,6 +166,8 @@ def run_batch_variant(input_path: Path, variant: dict, alpha_matting: bool, edge
     if variant_id == "solid-bg-corner-matte":
         bg = resolve_batch_edge_bg(edge_bg, source)
         return solid_background_variant(source.convert("RGB"), bg)
+    if variant_id == "multi-shade-bg-matte":
+        return multi_shade_background_variant(source.convert("RGB"))
     if engine == "rembg" or variant_id.startswith("rembg-"):
         bg = resolve_batch_edge_bg(edge_bg, source)
         model = variant.get("model") or variant_id.removeprefix("rembg-")

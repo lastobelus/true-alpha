@@ -3,7 +3,7 @@ import shutil
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from PIL import Image
-from .alpha import decontaminate_edges, estimate_corner_background, sanitize_rgba, solid_background_matte
+from .alpha import decontaminate_edges, estimate_corner_background, multi_shade_background_matte, sanitize_rgba, solid_background_matte
 
 @dataclass
 class EngineResult:
@@ -32,6 +32,15 @@ def solid_background_variant(input_image: Image.Image, bg_rgb: tuple[int, int, i
         return EngineResult("solid-bg-corner-matte", f"Solid-bg matte ({used_bg[0]},{used_bg[1]},{used_bg[2]})", "pillow-numpy", None, "ok", output_image=out, notes=["Estimated/cut known flat background from corner colour samples.", "Best for images generated on a deliberately flat matte background."])
     except Exception as exc:
         return EngineResult("solid-bg-corner-matte", "Solid-bg matte", "pillow-numpy", None, "failed", error=str(exc))
+
+def multi_shade_background_variant(input_image: Image.Image) -> EngineResult:
+    try:
+        out, colors = multi_shade_background_matte(input_image)
+        label = "Multi-shade bg matte"
+        color_note = ", ".join(f"({r},{g},{b})" for r, g, b in colors)
+        return EngineResult("multi-shade-bg-matte", label, "pillow-numpy", "border-colors", "ok", output_image=out, notes=[f"Removed nearest of {len(colors)} detected border/background colours: {color_note}.", "Best for baked checkerboards or flat backgrounds with a small number of repeated shades."])
+    except Exception as exc:
+        return EngineResult("multi-shade-bg-matte", "Multi-shade bg matte", "pillow-numpy", "border-colors", "failed", error=str(exc))
 
 def rembg_variant(input_path: Path, model: str, decontam_bg: tuple[int, int, int] | None = None, alpha_matting: bool = True) -> EngineResult:
     variant_id = f"rembg-{model}".replace("_", "-")

@@ -175,6 +175,7 @@ sudo apt install zenity
 
 - `source-alpha-sanitize` — preserves and sanitizes existing alpha if the input already has transparency.
 - `solid-bg-corner-matte` — fast non-AI matte from the estimated flat corner background colour.
+- `multi-shade-bg-matte` — fast non-AI matte that removes the nearest of several detected border/background colours, useful for baked checkerboards or other repeated flat background shades.
 - `rembg-u2netp` — lightweight rembg model.
 - `rembg-u2net` — general rembg model.
 - `rembg-isnet-general-use` — ISNet general-use model.

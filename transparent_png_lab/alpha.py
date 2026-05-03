@@ -88,6 +88,55 @@ def solid_background_matte(image: Image.Image, bg_rgb: tuple[int, int, int] | No
     rgba.putalpha(alpha_img)
     return decontaminate_edges(rgba, bg_rgb)
 
+def estimate_border_background_colors(image: Image.Image, max_colors: int = 4, border: int = 32, bin_size: int = 16, min_distance: float = 24.0, min_fraction: float = 0.05) -> list[tuple[int, int, int]]:
+    rgb = image.convert("RGB")
+    arr = np.asarray(rgb)
+    h, w, _ = arr.shape
+    b = max(1, min(border, max(1, h // 4), max(1, w // 4)))
+    samples = np.concatenate([arr[:b, :, :].reshape(-1, 3), arr[h-b:, :, :].reshape(-1, 3), arr[:, :b, :].reshape(-1, 3), arr[:, w-b:, :].reshape(-1, 3)], axis=0)
+    quantized = (samples // bin_size).astype(np.int16)
+    bins, inverse, counts = np.unique(quantized, axis=0, return_inverse=True, return_counts=True)
+    order = np.argsort(counts)[::-1]
+    colors: list[tuple[int, int, int]] = []
+    selected: list[np.ndarray] = []
+    for index in order:
+        if counts[index] / len(samples) < min_fraction:
+            continue
+        members = samples[inverse == index]
+        color = np.median(members, axis=0)
+        if selected and min(float(np.linalg.norm(color - existing)) for existing in selected) < min_distance:
+            continue
+        selected.append(color)
+        colors.append(tuple(int(x) for x in color))
+        if len(colors) >= max_colors:
+            break
+    return colors or [estimate_corner_background(rgb)]
+
+def multi_shade_background_matte(image: Image.Image, bg_rgbs: list[tuple[int, int, int]] | None = None, low: float = 10.0, high: float = 80.0, feather: float = 1.0) -> tuple[Image.Image, list[tuple[int, int, int]]]:
+    rgb_image = image.convert("RGB")
+    colors = bg_rgbs or estimate_border_background_colors(rgb_image)
+    arr = np.asarray(rgb_image).astype(np.float32)
+    bg = np.array(colors, dtype=np.float32)
+    distances = np.sqrt(np.sum((arr[:, :, None, :] - bg[None, None, :, :]) ** 2, axis=3))
+    nearest_index = np.argmin(distances, axis=2)
+    nearest_dist = np.take_along_axis(distances, nearest_index[:, :, None], axis=2)[:, :, 0]
+    alpha = np.clip((nearest_dist - low) / max(high - low, 1.0), 0.0, 1.0)
+    alpha_img = Image.fromarray((alpha * 255.0).astype(np.uint8), "L")
+    if feather > 0:
+        alpha_img = alpha_img.filter(ImageFilter.GaussianBlur(radius=feather))
+    rgba = rgb_image.convert("RGBA")
+    rgba.putalpha(alpha_img)
+    out = np.array(rgba)
+    alpha_arr = out[:, :, 3].astype(np.float32) / 255.0
+    semi = (alpha_arr > 0.02) & (alpha_arr < 0.98)
+    if np.any(semi):
+        nearest_bg = bg[nearest_index]
+        rgb = out[:, :, :3].astype(np.float32)
+        a = alpha_arr[semi][:, None]
+        rgb[semi] = np.clip((rgb[semi] - (1.0 - a) * nearest_bg[semi]) / np.maximum(a, 1e-6), 0, 255)
+        out[:, :, :3] = rgb.astype(np.uint8)
+    return sanitize_rgba(Image.fromarray(out, "RGBA")), colors
+
 def save_alpha_mask(image: Image.Image, output_path: Path) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     to_rgba(image).getchannel("A").save(output_path)

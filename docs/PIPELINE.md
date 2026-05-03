@@ -76,6 +76,7 @@ Default variants are selected to give a useful spread:
 
 - preserve/sanitize existing alpha
 - non-AI solid-background matte
+- non-AI multi-shade matte for baked checkerboards and other flat backgrounds with repeated shades
 - rembg U2Net models
 - rembg ISNet model
 - rembg BiRefNet general model
